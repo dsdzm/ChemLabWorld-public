@@ -1,0 +1,83 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    namespace 'com.chemlab.game'
+    compileSdk 33
+
+    defaultConfig {
+        // 包名与旧版 ChemLab 保持一致：本版本即旧版的升级版，可直接覆盖安装，
+        // 用户数据（成就/设置）与旧版共享，不会出现两个图标并存
+        applicationId "com.chemlab.game"
+        minSdk 25            // Android 7.1+
+        targetSdk 33
+        // versionCode 必须比上一版（8）大，覆盖安装才能成功
+        versionCode 9
+        versionName "1.7"
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+
+    // 「器材联动实验」模式使用 Jetpack Compose（1.4.8 为 Kotlin 1.8.22 的官方配套版本）
+    buildFeatures {
+        compose true
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion '1.4.8'
+    }
+
+    // 固定签名密钥：保证不同构建/不同机器产出的 APK 签名一致，避免覆盖安装时报"未安装应用"
+    // 签名信息从项目根目录的 keystore.properties 读取（该文件已被 .gitignore 排除，不会提交）。
+    // 没有该文件时按普通未签名构建处理。
+    def keystorePropertiesFile = rootProject.file("keystore.properties")
+    def keystoreProperties = new Properties()
+    if (keystorePropertiesFile.exists()) {
+        keystorePropertiesFile.withInputStream { keystoreProperties.load(it) }
+    }
+
+    signingConfigs {
+        release {
+            if (keystorePropertiesFile.exists()) {
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            if (keystorePropertiesFile.exists()) {
+                signingConfig signingConfigs.release
+            }
+        }
+        debug {
+            if (keystorePropertiesFile.exists()) {
+                signingConfig signingConfigs.release
+            }
+        }
+    }
+}
+
+dependencies {
+    // 仅新增模式所需的 Compose 依赖，原有模块（Reaction/GameState/GameView）仍为纯 Framework
+    implementation platform('androidx.compose:compose-bom:2023.01.00')
+    implementation 'androidx.compose.ui:ui'
+    implementation 'androidx.compose.ui:ui-graphics'
+    implementation 'androidx.compose.foundation:foundation'
+    implementation 'androidx.compose.material3:material3'
+    implementation 'androidx.activity:activity-compose:1.6.1'
+    implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.5.1'
+    implementation 'androidx.core:core-ktx:1.9.0'
+}

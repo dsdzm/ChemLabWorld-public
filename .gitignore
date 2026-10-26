@@ -1,0 +1,25 @@
+# Gradle 构建产物与缓存
+.gradle/
+build/
+/app/build/
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 日志
+*.log
+
+# 签名密钥与密码（不提交）
+keystore.properties
+keystore/
+*.jks
+*.keystore
